@@ -12,7 +12,7 @@ This Magisk module automates the installation of Burp Suite's CA certificate as 
 ## Requirements
 - Rooted Android device with **Magisk** installed.
 - Burp Suite installed on your computer.
-- ADB (Android Debug Bridge) for transferring the certificate.
+- ADB (Android Debug Bridge) for transferring the module ZIP file.
 
 ## Installation
 
@@ -22,23 +22,45 @@ This Magisk module automates the installation of Burp Suite's CA certificate as 
 3. Click **Import / Export CA Certificate**.
 4. Select **DER format** and save the certificate as `cacert.der`.
 
-### 2. Transfer the Certificate to Your Device
-Use ADB to push the certificate to a known location on your device:
+### 2. Convert Certificate to System Format
+Android system certificates use a `.0` format with a hashed filename. To convert the certificate:
+
 ```sh
-adb push cacert.der /sdcard/
+openssl x509 -inform DER -in cacert.der -subject_hash_old -noout
+```
+This will output a hash, e.g., `9a5ba575`.
+
+Rename the certificate accordingly:
+```sh
+mv cacert.der 9a5ba575.0
 ```
 
-### 3. Install the Magisk Module
-1. Download the Magisk module from [GitHub](your-repo-link-here).
-2. Open **Magisk Manager**.
-3. Go to **Modules** and tap **Install from Storage**.
-4. Select the module ZIP file and install it.
-5. Reboot your device.
+### 3. Place the Certificate in the Module Directory
+Move the converted certificate to the module's system certificate directory inside the repository:
+```sh
+mv 9a5ba575.0 system/etc/security/cacerts/
+```
 
-### 4. Verify Installation
+### 4. Create the Magisk Module ZIP
+Once the certificate is placed in the correct directory, navigate to the repository root and package the module into a ZIP file:
+```sh
+cd <your-magisk-module-repo>
+zip -r BurpCA-Magisk-Module.zip .
+```
+
+### 5. Transfer the ZIP to Your Device
+Instead of using ADB to push the certificate, transfer the module ZIP file directly to your device’s storage (e.g., **SD card, internal storage, or via a file manager**).
+
+### 6. Install the Magisk Module
+1. Open **Magisk Manager**.
+2. Go to **Modules** and tap **Install from Storage**.
+3. Select the module ZIP file and install it.
+4. Reboot your device.
+
+### 7. Verify Installation
 After reboot, confirm that the certificate is installed:
 ```sh
-ls /system/etc/security/cacerts/ | grep burp
+ls /system/etc/security/cacerts/ | grep 9a5ba575.0
 ```
 If you see a `.0` file with a hash-like name, the installation was successful.
 
