@@ -26,7 +26,8 @@ This Magisk module automates the installation of Burp Suite's CA certificate as 
 Android system certificates use a `.0` format with a hashed filename. To convert the certificate:
 
 ```sh
-openssl x509 -inform DER -in cacert.der -subject_hash_old -noout
+openssl x509 -inform DER -in cacert.der -out cacert.pem
+openssl x509 -inform PEM -subject_hash_old -in cacert.pem |head -1
 ```
 This will output a hash, e.g., `9a5ba575`.
 
